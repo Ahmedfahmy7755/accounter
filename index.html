@@ -1,0 +1,686 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Accountant - Smart Financial Analysis</title>
+    <style>
+        /* Reset and Base Styles */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        /* Header Styles */
+        .header {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1.5rem 0;
+            box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header h1 {
+            text-align: center;
+            color: #2c3e50;
+            font-size: 2.5rem;
+            font-weight: 700;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .header p {
+            text-align: center;
+            color: #7f8c8d;
+            margin-top: 0.5rem;
+            font-size: 1.1rem;
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        /* Input Section */
+        .input-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+            transform: translateY(0);
+            transition: transform 0.3s ease;
+        }
+
+        .input-section:hover {
+            transform: translateY(-5px);
+        }
+
+        .input-label {
+            display: block;
+            margin-bottom: 1rem;
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 1.1rem;
+        }
+
+        .transaction-input {
+            width: 100%;
+            min-height: 150px;
+            padding: 1rem;
+            border: 2px solid #e0e6ed;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-family: inherit;
+            resize: vertical;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+
+        .transaction-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            background: white;
+        }
+
+        .analyze-btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 1rem;
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .analyze-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .analyze-btn:active {
+            transform: translateY(0);
+        }
+
+        .analyze-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 2rem;
+            color: #667eea;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Results Section */
+        .results-section {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            margin-bottom: 2rem;
+            display: none;
+        }
+
+        .results-section.active {
+            display: block;
+            animation: fadeInUp 0.5s ease;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Table Styles */
+        .transactions-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 2rem;
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .transactions-table th,
+        .transactions-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #e0e6ed;
+        }
+
+        .transactions-table th {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .transactions-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .type-income {
+            color: #27ae60;
+            font-weight: 600;
+        }
+
+        .type-expense {
+            color: #e74c3c;
+            font-weight: 600;
+        }
+
+        .amount {
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        /* Summary Section */
+        .summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .summary-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .summary-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .summary-card h3 {
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+            font-size: 1.1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .summary-card .value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .income-value {
+            color: #27ae60;
+        }
+
+        .expense-value {
+            color: #e74c3c;
+        }
+
+        .net-profit {
+            color: #27ae60;
+        }
+
+        .net-loss {
+            color: #e74c3c;
+        }
+
+        /* Error Styles */
+        .error {
+            background: #fee;
+            color: #c33;
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            border-left: 4px solid #c33;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .container {
+                padding: 1rem;
+            }
+
+            .input-section,
+            .results-section {
+                padding: 1.5rem;
+            }
+
+            .transactions-table {
+                font-size: 0.9rem;
+            }
+
+            .transactions-table th,
+            .transactions-table td {
+                padding: 0.75rem;
+            }
+
+            .summary {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Example Text */
+        .example-text {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 8px;
+            margin-top: 1rem;
+            border-left: 4px solid #667eea;
+        }
+
+        .example-text h4 {
+            color: #2c3e50;
+            margin-bottom: 0.5rem;
+        }
+
+        .example-text p {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header Section -->
+    <div class="header">
+        <h1>🤖 AI Accountant</h1>
+        <p>Intelligent Financial Transaction Analysis</p>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Input Section -->
+        <div class="input-section">
+            <label for="transactionInput" class="input-label">
+                📝 Enter your financial transactions in natural English:
+            </label>
+            <textarea 
+                id="transactionInput" 
+                class="transaction-input" 
+                placeholder="Enter transactions like:
+• Received $1500 from client for web development
+• Paid $300 for Adobe Creative Suite subscription  
+• Got $2000 salary deposit from employer
+• Spent $45 on office supplies at Staples
+• Earned $500 from freelance writing project"
+            ></textarea>
+            
+            <button id="analyzeBtn" class="analyze-btn">
+                🔍 Analyze Transactions
+            </button>
+
+            <!-- Example Section -->
+            <div class="example-text">
+                <h4>💡 Example Transactions:</h4>
+                <p>Try entering multiple transactions separated by new lines. The AI will automatically classify them as income or expenses and extract amounts, categories, and descriptions.</p>
+            </div>
+        </div>
+
+        <!-- Loading Section -->
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <p>🧠 AI is analyzing your transactions...</p>
+        </div>
+
+        <!-- Results Section -->
+        <div id="resultsSection" class="results-section">
+            <h2>📊 Transaction Analysis Results</h2>
+            
+            <!-- Transactions Table -->
+            <table id="transactionsTable" class="transactions-table">
+                <thead>
+                    <tr>
+                        <th>Description</th>
+                        <th>Type</th>
+                        <th>Amount</th>
+                        <th>Category</th>
+                    </tr>
+                </thead>
+                <tbody id="transactionsBody">
+                </tbody>
+            </table>
+
+            <!-- Summary Section -->
+            <div class="summary">
+                <div class="summary-card">
+                    <h3>💰 Total Income</h3>
+                    <div id="totalIncome" class="value income-value">$0</div>
+                </div>
+                <div class="summary-card">
+                    <h3>💸 Total Expenses</h3>
+                    <div id="totalExpenses" class="value expense-value">$0</div>
+                </div>
+                <div class="summary-card">
+                    <h3>📈 Net Result</h3>
+                    <div id="netResult" class="value">$0</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Error Section -->
+        <div id="errorSection" class="error" style="display: none;">
+        </div>
+    </div>
+
+    <script>
+        // Configuration - Replace with your OpenRouter API key
+        const API_KEY = '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'; // Your OpenRouter API key
+        const API_URL = 'https://openrouter.ai/api/v1/chat/completions';
+        const MODEL = 'mistralai/mistral-7b-instruct:free';
+
+        // DOM Elements
+        const transactionInput = document.getElementById('transactionInput');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const loading = document.getElementById('loading');
+        const resultsSection = document.getElementById('resultsSection');
+        const transactionsBody = document.getElementById('transactionsBody');
+        const totalIncome = document.getElementById('totalIncome');
+        const totalExpenses = document.getElementById('totalExpenses');
+        const netResult = document.getElementById('netResult');
+        const errorSection = document.getElementById('errorSection');
+
+        // Event Listeners
+        analyzeBtn.addEventListener('click', analyzeTransactions);
+
+        // Allow Enter key to trigger analysis (Ctrl+Enter for new line)
+        transactionInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && e.ctrlKey) {
+                analyzeTransactions();
+            }
+        });
+
+        /**
+         * Main function to analyze transactions using AI
+         */
+        async function analyzeTransactions() {
+            const inputText = transactionInput.value.trim();
+            
+            // Validation
+            if (!inputText) {
+                showError('Please enter some transactions to analyze.');
+                return;
+            }
+
+            if (API_KEY === 'YOUR_OPENROUTER_API_KEY_HERE') {
+                showError('Please replace YOUR_OPENROUTER_API_KEY_HERE with your actual OpenRouter API key.');
+                return;
+            }
+
+            // Show loading state
+            setLoadingState(true);
+            hideError();
+            hideResults();
+
+            try {
+                // Call OpenRouter API
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${API_KEY}`,
+                        'Content-Type': 'application/json',
+                        'HTTP-Referer': window.location.href,
+                        'X-Title': 'AI Accountant'
+                    },
+                    body: JSON.stringify({
+                        model: MODEL,
+                        messages: [
+                            {
+                                role: 'system',
+                                content: 'You are a financial transaction analyzer. Parse the user input and return ONLY a valid JSON array of transactions. Each transaction should have: type (either "income" or "expense"), amount (number), currency (string), category (string), description (string). Do not include any explanation or additional text, just the JSON array.'
+                            },
+                            {
+                                role: 'user',
+                                content: `Please analyze these financial transactions and return them as a JSON array:\n\n${inputText}`
+                            }
+                        ],
+                        temperature: 0.1,
+                        max_tokens: 1000
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API Error: ${response.status} ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                
+                // Extract the AI response
+                const aiResponse = data.choices[0].message.content.trim();
+                
+                // Parse the JSON response
+                const transactions = parseAIResponse(aiResponse);
+                
+                // Display results
+                displayResults(transactions);
+                
+            } catch (error) {
+                console.error('Error analyzing transactions:', error);
+                showError(`Error analyzing transactions: ${error.message}`);
+            } finally {
+                setLoadingState(false);
+            }
+        }
+
+        /**
+         * Parse AI response and extract JSON
+         */
+        function parseAIResponse(response) {
+            try {
+                // Try to find JSON in the response
+                const jsonMatch = response.match(/\[[\s\S]*\]/);
+                if (jsonMatch) {
+                    return JSON.parse(jsonMatch[0]);
+                }
+                
+                // If no JSON found, try parsing the entire response
+                return JSON.parse(response);
+            } catch (error) {
+                throw new Error('Failed to parse AI response. Please try again with clearer transaction descriptions.');
+            }
+        }
+
+        /**
+         * Display the analyzed transactions
+         */
+        function displayResults(transactions) {
+            // Clear previous results
+            transactionsBody.innerHTML = '';
+            
+            let totalIncomeAmount = 0;
+            let totalExpenseAmount = 0;
+
+            // Populate the table
+            transactions.forEach(transaction => {
+                const row = document.createElement('tr');
+                
+                // Format amount
+                const formattedAmount = formatCurrency(transaction.amount, transaction.currency);
+                
+                // Add to totals
+                if (transaction.type === 'income') {
+                    totalIncomeAmount += transaction.amount;
+                } else {
+                    totalExpenseAmount += transaction.amount;
+                }
+                
+                row.innerHTML = `
+                    <td>${transaction.description}</td>
+                    <td><span class="type-${transaction.type}">${transaction.type.toUpperCase()}</span></td>
+                    <td class="amount">${formattedAmount}</td>
+                    <td>${transaction.category}</td>
+                `;
+                
+                transactionsBody.appendChild(row);
+            });
+
+            // Update summary
+            updateSummary(totalIncomeAmount, totalExpenseAmount);
+            
+            // Show results
+            showResults();
+        }
+
+        /**
+         * Update the summary section
+         */
+        function updateSummary(income, expenses) {
+            const net = income - expenses;
+            
+            totalIncome.textContent = formatCurrency(income);
+            totalExpenses.textContent = formatCurrency(expenses);
+            netResult.textContent = formatCurrency(Math.abs(net));
+            
+            // Set appropriate class for net result
+            netResult.className = 'value ' + (net >= 0 ? 'net-profit' : 'net-loss');
+        }
+
+        /**
+         * Format currency amount
+         */
+        function formatCurrency(amount, currency = 'USD') {
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: currency
+            }).format(amount);
+        }
+
+        /**
+         * Show/hide loading state
+         */
+        function setLoadingState(isLoading) {
+            if (isLoading) {
+                loading.classList.add('active');
+                analyzeBtn.disabled = true;
+                analyzeBtn.textContent = '🔄 Analyzing...';
+            } else {
+                loading.classList.remove('active');
+                analyzeBtn.disabled = false;
+                analyzeBtn.textContent = '🔍 Analyze Transactions';
+            }
+        }
+
+        /**
+         * Show results section
+         */
+        function showResults() {
+            resultsSection.classList.add('active');
+            resultsSection.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        /**
+         * Hide results section
+         */
+        function hideResults() {
+            resultsSection.classList.remove('active');
+        }
+
+        /**
+         * Show error message
+         */
+        function showError(message) {
+            errorSection.textContent = message;
+            errorSection.style.display = 'block';
+            errorSection.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        /**
+         * Hide error message
+         */
+        function hideError() {
+            errorSection.style.display = 'none';
+        }
+
+        // Add some sample data for demonstration
+        function loadSampleData() {
+            const sampleTransactions = `Got my freelance payment of $2,847.50 from TechCorp LLC last Friday for the mobile app project
+Withdrew €450 cash from ATM for my vacation in Paris next week
+My landlord charged me $1,200 rent plus a $50 late fee because I forgot to pay on time
+Amazon refunded me $89.99 for the defective laptop charger I returned
+Paid my business taxes - wrote a check for $3,156.78 to the IRS
+Received a dividend payment of £125.40 from my British Petroleum stocks
+Bought lunch for the team meeting at McDonald's, spent about $67 including tip
+Got my quarterly bonus from work - $4,500 deposited directly into my checking account
+Paid the mechanic $892.15 for fixing my car's transmission and oil change
+Sold my old iPhone 12 on eBay for $387, but they took $23 in fees
+Grandma sent me $100 for my birthday via Venmo
+Paid my credit card bill - $1,456.33 to Chase Bank
+Received $75 cash tip from my part-time bartending job last Saturday
+Spent ¥12,500 on souvenirs during my trip to Tokyo
+My insurance company reimbursed me $234.50 for my dental work
+Paid the plumber $195 emergency fee for fixing the kitchen sink at 2 AM
+Got a $50 cashback reward on my credit card statement
+Bought groceries at Whole Foods - $156.78 on organic vegetables and meat
+Received my tax refund of $2,891.46 from the state of California
+Paid my monthly gym membership $89.99 and bought a protein shake for $8.50`;
+            
+            transactionInput.value = sampleTransactions;
+        }
+
+        // Add a sample data button (optional)
+        const sampleBtn = document.createElement('button');
+        sampleBtn.textContent = '📋 Load Sample Data';
+        sampleBtn.style.cssText = 'background: #95a5a6; color: white; border: none; padding: 0.5rem 1rem; border-radius: 8px; cursor: pointer; margin-top: 0.5rem; font-size: 0.9rem;';
+        sampleBtn.onclick = loadSampleData;
+        document.querySelector('.input-section').appendChild(sampleBtn);
+    </script>
+</body>
+</html>
